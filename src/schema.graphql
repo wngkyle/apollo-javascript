@@ -12,6 +12,15 @@ type Mutation {
     login(email: String!, password: String!): AuthPayload 
     addmovement(name: String!, exercise: String!, targetMuscle: String!, movementPattern: String!, equipment: String!, skillLevel: String!, description: String!): Movement!
     deleteMovement(id: Int!): Movement
+    vote(linkId: ID!): Vote
+    like(movementId: ID!): Like
+}
+
+type Subscription {
+    newLink: Link
+    newVote: Vote
+    newMovement: Movement
+    newLike: Like
 }
 
 type Link {
@@ -19,6 +28,7 @@ type Link {
     description: String!
     url: String!
     postedBy: User
+    votes: [Vote!]!
 }
 
 type Movement {
@@ -31,6 +41,7 @@ type Movement {
     skillLevel: String!
     description: String!
     postedBy: User
+    likes: [Like!]!
 }
 
 type User {
@@ -44,4 +55,16 @@ type User {
 type AuthPayload {
     token: String
     user: User
+}
+
+type Vote {
+    id: ID!
+    link: Link!
+    user: User!
+}
+
+type Like {
+    id: ID!
+    movement: Movement!
+    user: User!
 }

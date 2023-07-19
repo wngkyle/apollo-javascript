@@ -9,13 +9,22 @@ const Mutation = require('./resolvers/Mutation')
 const User = require('./resolvers/User')
 const Link = require('./resolvers/Link')
 const Movement = require('./resolvers/Movement')
+const { PubSub } = require('apollo-server')
+const Subscription = require('./resolvers/Subscription')
+const Vote = require('./resolvers/Vote')
+const Like = require('./resolvers/Like')
+
+const pubsub = new PubSub()
 
 const resolvers = {
     Query,
     Mutation,
+    Subscription,
     User,
     Link,
     Movement,
+    Vote,
+    Like,
 }
 
 // typeDefs can be provided either directly as a string or by referencing a file that contains your schema definition 
@@ -32,6 +41,7 @@ const server = new ApolloServer({
   context: ({ req }) => {
     return {
       ...req,
+      pubsub,
       prisma,
       userId:
         req && req.headers.authorization

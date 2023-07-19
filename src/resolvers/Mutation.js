@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const { APP_SECRET, getUserId } = require('../util')
+const { user } = require('./Vote')
 
 async function signup(parent, args, context, info) {
     // Encrypting the User's password using the bcrypt.js library 
@@ -48,19 +49,54 @@ async function login(parent, args, context, info) {
 async function post(parent, args, context, info) {
     const { userId } = context
   
-    return await context.prisma.Link.create({
+    const newLink = await context.prisma.Link.create({
         data: {
             url: args.url,
             description: args.description,
             postedBy: { connect: { id: userId } },
         }
     })
+    context.pubsub.publish("NEW_LINK", newLink)
+
+    return newLink
 }
+
+async function vote(parent, args, context, info) {
+    const userId = context.userId
+
+    // Check double-voting
+    // fetch a vote with the same linkId and userId
+    // If the vote exists, it will be stored in the vote variable, resulting in the boolean true from the call to Boolean(Vote)
+    // If Boolean(Vote) returns false, the vote.create method will be used to create a new Vote that's connected to the User and the Link
+    const vote = await context.prisma.Vote.findUnique({
+        where: {
+            linkId_userId: {
+                linkId: Number(args.linkId),
+                userId: userId
+            }
+        }
+    })
+
+    if(Boolean(vote)) {
+        throw new Error(`Already voted for link: ${args.linkId}`)
+    }
+
+    const newVote = context.prisma.Vote.create({
+        data: {
+            user: { connect: { id: userId} },
+            link: { connect: { id: Number(args.linkId) } },
+        }
+    })
+    context.pubsub.publish("NEW_VOTE", newVote)
+
+    return newVote
+}
+
 
 async function addmovement(parent, args, context, info) {
     const { userId } = context
 
-    return await context.prisma.Movement.create({
+    const newMovement = await context.prisma.Movement.create({
         data: {
             name: args.name,
             exercise: args.exercise,
@@ -72,6 +108,9 @@ async function addmovement(parent, args, context, info) {
             postedBy: { connect: { id: userId } },
         }
     })
+    context.pubsub.publish("NEW_MOVEMENT", newMovement)
+
+    return newMovement
 }
 
 function deleteMovement(parent, args, context) {
@@ -82,10 +121,39 @@ function deleteMovement(parent, args, context) {
     })
 }
 
+async function like(parent, args, context, info) {
+    const userId = context.userId
+
+    const like = await context.prisma.Like.findUnique({
+        where: {
+            movementId_userId: {
+                movementId: Number(args.movementId),
+                userId: userId
+            }
+        }
+    })
+    
+    if (Boolean(like)) {
+        throw new Error(`Already voted for movement: ${args.movementId}`)
+    }
+
+    const newLike = context.prisma.Like.create({
+        data: {
+            user: { connect: { id: userId } },
+            movement: { connect: { id: Number(args.movementId) } }
+        }
+    })
+    context.pubsub.publish("NEW_LIKE", newLike)
+
+    return newLike
+}
+
 module.exports = {
     signup,
     login,
     post,
     addmovement,
     deleteMovement,
+    vote,
+    like,
 }
