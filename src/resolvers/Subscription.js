@@ -1,5 +1,6 @@
 // Rather than returning any data directly, they return an AsyncIterator which subsequently is used 
 // by the GraphQL server to push the event data to the client
+// asyncIterator() : a function that is used to resolve subsriptions and push the event data
 function newLinkSubscribe(parent, args, context, info) {
     return context.pubsub.asyncIterator("NEW_LINK")
 }
@@ -10,6 +11,8 @@ function newLinkSubscribe(parent, args, context, info) {
 // data emitted by the AsyncIterator
 const newLink = {
     subscribe: newLinkSubscribe,
+    // Payload here represents the data sent to the subscribed clients when a new vote is published
+    // payload = new vote data
     resolve: payload => {
         return payload
     },

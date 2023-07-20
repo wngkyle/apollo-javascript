@@ -1,8 +1,8 @@
 type Query {
-    feed: [Link!]!
+    feed(filter: String, skip: Int, take: Int, orderBy: LinkOrderByInput): Feed!
     showAllUsers: [User!]!
     link(id: Int!): Link
-    show: [Movement!]!
+    show(filter: String, skip: Int, take: Int, orderBy: MovementOrderByInput): [Movement!]!
     movement(id: Int!): Movement
 }
 
@@ -67,4 +67,30 @@ type Like {
     id: ID!
     movement: Movement!
     user: User!
+}
+
+input LinkOrderByInput {
+    description: Sort
+    url: Sort
+    createdAt: Sort
+}
+
+enum Sort {
+    asc
+    desc
+}
+
+type Feed {
+    links: [Link!]!
+    count: Int!
+}
+
+input MovementOrderByInput {
+    name: Sort
+    exercise: Sort
+    targetMuscle: Sort
+    movementPattern: Sort
+    equipment: Sort
+    skillLevel: Sort
+    createdAt: Sort
 }
